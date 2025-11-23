@@ -9,7 +9,7 @@ import { PracticeMode } from './modes/PracticeMode';
 import { Settings } from './components/Settings';
 import { Stats } from './components/Stats';
 import { ExportImport } from './components/ExportImport';
-import { getSettings, getPuzzlesByDifficulty, getAllPuzzles } from './services/localStore';
+import { getSettings, getAllPuzzles } from './services/localStore';
 import type { GameMode, Puzzle, GameSettings } from './types';
 
 // wrapper component to load puzzle for practice mode

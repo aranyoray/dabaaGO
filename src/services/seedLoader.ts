@@ -1,7 +1,6 @@
 // load seed puzzle data on app initialization
 
 import { importSeedData, getStoredPuzzleCount } from './puzzleImporter';
-import { getAllPuzzles } from './localStore';
 import type { Puzzle } from '../types';
 
 // load seed data from json file

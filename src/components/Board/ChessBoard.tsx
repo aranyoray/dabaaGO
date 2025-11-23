@@ -1,6 +1,6 @@
 // svg chess board component with 2.5d styling
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Chess } from 'chess.js';
 import type { Square } from 'chess.js';
 import { Piece } from './Piece';
@@ -27,8 +27,7 @@ export function ChessBoard({
   lastMove,
   disabled = false,
 }: ChessBoardProps) {
-  const [draggedSquare, setDraggedSquare] = useState<Square | null>(null);
-  const [hoveredSquare, setHoveredSquare] = useState<Square | null>(null);
+  const [selected, setSelected] = useState<Square | null>(null);
   const boardRef = useRef<SVGSVGElement>(null);
   const chess = new Chess(fen);
 
@@ -52,41 +51,23 @@ export function ChessBoard({
   };
 
   const handleSquareClick = (square: Square) => {
-    if (disabled) return;
-
-    if (selectedSquare) {
-      if (selectedSquare === square) {
-        // deselect
+    if (disabled || !onMove) return;
+    
+    if (selected) {
+      if (selected === square) {
+        setSelected(null);
         return;
       }
-      // try to make move
-      if (isLegalMove(selectedSquare, square)) {
-        onMove?.(selectedSquare, square);
+      if (isLegalMove(selected, square)) {
+        onMove(selected, square);
+        setSelected(null);
       }
     } else {
-      // select square if it has a piece of current turn
       const piece = chess.get(square);
       if (piece && piece.color === chess.turn()) {
-        // set selected
+        setSelected(square);
       }
     }
-  };
-
-  const handleSquareMouseDown = (square: Square) => {
-    if (disabled) return;
-    const piece = chess.get(square);
-    if (piece && piece.color === chess.turn()) {
-      setDraggedSquare(square);
-    }
-  };
-
-  const handleSquareMouseUp = (square: Square) => {
-    if (disabled || !draggedSquare) return;
-    
-    if (draggedSquare !== square && isLegalMove(draggedSquare, square)) {
-      onMove?.(draggedSquare, square);
-    }
-    setDraggedSquare(null);
   };
 
   const squares = [];
@@ -97,11 +78,9 @@ export function ChessBoard({
       const square = getSquare(displayFile, displayRank);
       const isLightSquare = isLight(displayFile, displayRank);
       const piece = chess.get(square);
-      const isSelected = selectedSquare === square;
+      const isSelected = (selectedSquare || selected) === square;
       const isLastMoveFrom = lastMove?.from === square;
       const isLastMoveTo = lastMove?.to === square;
-      const isHovered = hoveredSquare === square;
-      const isDragged = draggedSquare === square;
 
       squares.push(
         <g key={square}>
@@ -113,9 +92,10 @@ export function ChessBoard({
             fill={isLightSquare ? '#f0d9b5' : '#b58863'}
             className="board-tile"
             style={{
-              filter: isHovered ? 'brightness(1.1)' : undefined,
               transition: 'filter 0.1s',
+              cursor: disabled ? 'default' : 'pointer',
             }}
+            onClick={() => handleSquareClick(square)}
           />
           {(isLastMoveFrom || isLastMoveTo) && (
             <rect
@@ -135,7 +115,7 @@ export function ChessBoard({
               fill="rgba(20, 85, 30, 0.5)"
             />
           )}
-          {legalMoves.length > 0 && selectedSquare && isLegalMove(selectedSquare, square) && (
+          {legalMoves.length > 0 && (selectedSquare || selected) && isLegalMove((selectedSquare || selected)!, square) && (
             <circle
               cx={file * 62.5 + 31.25}
               cy={rank * 62.5 + 31.25}
@@ -143,7 +123,7 @@ export function ChessBoard({
               fill={piece ? 'rgba(20, 85, 30, 0.3)' : 'rgba(20, 85, 30, 0.5)'}
             />
           )}
-          {piece && !isDragged && (
+          {piece && (
             <Piece
               type={piece.type}
               color={piece.color}
@@ -167,23 +147,6 @@ export function ChessBoard({
         style={{ maxWidth: '100%', height: 'auto' }}
       >
         {squares}
-        {draggedSquare && (() => {
-          const piece = chess.get(draggedSquare);
-          if (!piece) return null;
-          const file = FILES.indexOf(draggedSquare[0] as any);
-          const rank = parseInt(draggedSquare[1]) - 1;
-          const displayFile = orientation === 'white' ? file : 7 - file;
-          const displayRank = orientation === 'white' ? 7 - rank : rank;
-          return (
-            <Piece
-              type={piece.type}
-              color={piece.color}
-              x={displayFile * 62.5 + 31.25}
-              y={displayRank * 62.5 + 31.25}
-              opacity={0.8}
-            />
-          );
-        })()}
       </svg>
     </div>
   );

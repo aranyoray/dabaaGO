@@ -3,8 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Chess, Square } from 'chess.js';
 import type { Puzzle } from '../types';
-import { getPuzzle, saveProgress, getProgress } from '../services/localStore';
-import { getHint, verifySolution } from '../services/engine';
+import { verifySolution, getHint } from '../services/engine';
 
 interface UsePuzzleResult {
   chess: Chess;

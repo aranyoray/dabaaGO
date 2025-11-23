@@ -12,7 +12,9 @@ export function Stats({ onClose }: StatsProps) {
   const [stats, setStats] = useState<UserStats | null>(null);
 
   useEffect(() => {
-    getStats().then(setStats);
+    getStats().then(s => {
+      if (s) setStats(s);
+    });
   }, []);
 
   if (!stats) {

@@ -19,7 +19,6 @@ export function BlitzMode({ timeLimit, difficulty, onExit }: BlitzModeProps) {
   const [currentPuzzle, setCurrentPuzzle] = useState<Puzzle | null>(null);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [puzzleIndex, setPuzzleIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [timeRemaining, setTimeRemaining] = useState(timeLimit);
 
@@ -64,7 +63,7 @@ export function BlitzMode({ timeLimit, difficulty, onExit }: BlitzModeProps) {
   const handleTimeout = useCallback(async () => {
     if (currentPuzzle) {
       // save failed attempt
-      const progress = await saveProgress({
+      await saveProgress({
         puzzleId: currentPuzzle.id,
         solved: false,
         attempts: 1,
@@ -73,7 +72,6 @@ export function BlitzMode({ timeLimit, difficulty, onExit }: BlitzModeProps) {
       setStreak(0);
       // show failure message briefly, then next puzzle
       setTimeout(() => {
-        setPuzzleIndex(prev => prev + 1);
         loadNextPuzzle();
       }, 2000);
     }
@@ -111,7 +109,6 @@ export function BlitzMode({ timeLimit, difficulty, onExit }: BlitzModeProps) {
       
       // show success briefly, then next puzzle
       setTimeout(() => {
-        setPuzzleIndex(prev => prev + 1);
         loadNextPuzzle();
       }, 1500);
     }

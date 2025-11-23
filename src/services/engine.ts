@@ -126,7 +126,6 @@ export async function analyzePosition(
         // info format: "info depth 10 score cp 150 pv e2e4 e7e5"
         const depthMatch = data.match(/depth\s+(\d+)/);
         const scoreMatch = data.match(/score\s+(?:cp|mate)\s+(-?\d+)/);
-        const pvMatch = data.match(/pv\s+([a-h1-8\s]+)/);
 
         if (depthMatch) {
           currentDepth = parseInt(depthMatch[1], 10);
@@ -179,7 +178,7 @@ export async function verifySolution(
       if (analysis?.bestMove) {
         // convert uci to san for comparison
         chess.load(currentFen);
-        const uciMove = chess.move(analysis.bestMove, { sloppy: true });
+        const uciMove = chess.move(analysis.bestMove);
         if (uciMove && uciMove.san === move) {
           chess.move(move);
           currentFen = chess.fen();

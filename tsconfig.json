@@ -20,7 +20,8 @@
     "forceConsistentCasingInFileNames": true,
     "types": ["vite/client", "vitest/globals", "@testing-library/jest-dom"]
   },
-  "include": ["src", "scripts", "tests"],
+  "include": ["src", "tests"],
+  "exclude": ["scripts", "node_modules", "dist"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
 
