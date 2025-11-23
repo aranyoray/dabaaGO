@@ -1,0 +1,12 @@
+node_modules
+dist
+.DS_Store
+*.log
+.env
+.env.local
+.vite
+coverage
+data/puzzles-*.json
+data/lichess-*.json
+data/raw/
+

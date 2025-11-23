@@ -1,0 +1,82 @@
+[
+  {
+    "id": "seed-1",
+    "fen": "r1bqkb1r/pppp1ppp/2n2n2/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4",
+    "solution": ["Bxf7+"],
+    "difficulty": "simple",
+    "pieceCount": 16,
+    "rating": 1200
+  },
+  {
+    "id": "seed-2",
+    "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4",
+    "solution": ["Nxe5", "Nxe5", "d4"],
+    "difficulty": "medium",
+    "pieceCount": 16,
+    "rating": 1500
+  },
+  {
+    "id": "seed-3",
+    "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R b KQkq - 0 4",
+    "solution": ["Nxe4", "d4", "Nc3"],
+    "difficulty": "medium",
+    "pieceCount": 16,
+    "rating": 1600
+  },
+  {
+    "id": "seed-4",
+    "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4",
+    "solution": ["Nxe5", "Nxe5", "d4", "Ng6", "Bxf7+"],
+    "difficulty": "hard",
+    "pieceCount": 16,
+    "rating": 1800
+  },
+  {
+    "id": "seed-5",
+    "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4",
+    "solution": ["Nxe5", "Nxe5", "d4", "Ng6", "Bxf7+", "Kxf7", "Ne5+"],
+    "difficulty": "ultra",
+    "pieceCount": 16,
+    "rating": 2000
+  },
+  {
+    "id": "seed-6",
+    "fen": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1",
+    "solution": ["e5"],
+    "difficulty": "simple",
+    "pieceCount": 16,
+    "rating": 1000
+  },
+  {
+    "id": "seed-7",
+    "fen": "rnbqkb1r/pppp1ppp/5n2/4p3/2PP4/8/PP2PPPP/RNBQKBNR w KQkq e6 0 3",
+    "solution": ["cxd5", "exd5", "d5"],
+    "difficulty": "medium",
+    "pieceCount": 16,
+    "rating": 1400
+  },
+  {
+    "id": "seed-8",
+    "fen": "r1bqkb1r/pp2pppp/2n2n2/2pp4/2PP4/2N2N2/PP2PPPP/R1BQKB1R w KQkq - 0 4",
+    "solution": ["cxd5", "Nxd5", "e4"],
+    "difficulty": "medium",
+    "pieceCount": 16,
+    "rating": 1500
+  },
+  {
+    "id": "seed-9",
+    "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4",
+    "solution": ["Nxe5", "Nxe5", "d4", "Ng6", "Bxf7+", "Kxf7", "Ne5+", "Ke6"],
+    "difficulty": "ultra",
+    "pieceCount": 16,
+    "rating": 2200
+  },
+  {
+    "id": "seed-10",
+    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+    "solution": ["e4"],
+    "difficulty": "simple",
+    "pieceCount": 16,
+    "rating": 800
+  }
+]
