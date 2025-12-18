@@ -20,6 +20,10 @@ export default {
       animation: {
         'move-confirm': 'moveConfirm 0.2s ease-out',
         'puzzle-success': 'puzzleSuccess 0.5s ease-out',
+        'bounce-in': 'bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+        'fade-in': 'fadeIn 0.3s ease-in',
+        'float': 'float 3s ease-in-out infinite',
+        'wave': 'wave 2s ease-in-out infinite',
       },
       keyframes: {
         moveConfirm: {
@@ -31,6 +35,24 @@ export default {
           '0%': { transform: 'scale(1)', opacity: '1' },
           '50%': { transform: 'scale(1.05)', opacity: '0.9' },
           '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        bounceIn: {
+          '0%': { transform: 'scale(0)', opacity: '0' },
+          '50%': { transform: 'scale(1.1)', opacity: '1' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        wave: {
+          '0%, 100%': { transform: 'rotate(0deg)' },
+          '25%': { transform: 'rotate(15deg)' },
+          '75%': { transform: 'rotate(-15deg)' },
         },
       },
     },

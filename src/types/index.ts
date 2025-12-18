@@ -55,13 +55,76 @@ export interface ExportData {
   settings: GameSettings;
 }
 
-export type GameMode = 
+export type PlayerLevel = 'beginner' | 'amateur';
+
+export type League = 'stone' | 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond' | 'master';
+
+export interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  earnedAt?: number;
+  requirement: number; // streak required
+}
+
+export interface UserProfile {
+  level: PlayerLevel;
+  elo: number;
+  league: League;
+  streakCount: number;
+  lastPlayedDate: number;
+  badges: Badge[];
+  totalPlayTime: number; // minutes
+  hasCompletedTutorial: boolean;
+}
+
+export interface PuzzleScore {
+  puzzleId: string;
+  score: number; // 0-100
+  timeBonus: number;
+  accuracyBonus: number;
+  attemptsDeduction: number;
+  timestamp: number;
+}
+
+export type GameMode =
   | 'blitz'
   | 'timed-limited'
   | 'practice'
   | 'ultra'
   | 'progression'
-  | 'daily';
+  | 'daily'
+  | 'puzzle-rush'
+  | 'infinite-lives'
+  | 'streak-freeze'
+  | '1v1'
+  | 'first-to-10'
+  | 'five-to-victory';
+
+export type GameModeCategory = 'casual' | 'ranked';
+
+export interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: 'streak' | 'score' | 'speed' | 'accuracy' | 'special';
+  unlocked: boolean;
+  unlockedAt?: number;
+  progress: number;
+  target: number;
+}
+
+export interface LeaderboardEntry {
+  userId: string;
+  username: string;
+  score: number;
+  elo: number;
+  league: League;
+  streakCount: number;
+  rank: number;
+}
 
 export interface TimerState {
   remaining: number; // milliseconds
