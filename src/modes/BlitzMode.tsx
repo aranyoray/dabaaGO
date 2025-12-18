@@ -21,6 +21,7 @@ export function BlitzMode({ timeLimit, difficulty, onExit }: BlitzModeProps) {
   const [streak, setStreak] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [timeRemaining, setTimeRemaining] = useState(timeLimit);
+  const [hintMessage, setHintMessage] = useState<string | null>(null);
 
   const puzzle = usePuzzle(currentPuzzle);
 
@@ -31,6 +32,7 @@ export function BlitzMode({ timeLimit, difficulty, onExit }: BlitzModeProps) {
 
   const loadNextPuzzle = async () => {
     setIsLoading(true);
+    setHintMessage(null);
     try {
       let puzzles: Puzzle[];
       if (difficulty === 'adaptive') {
@@ -62,13 +64,36 @@ export function BlitzMode({ timeLimit, difficulty, onExit }: BlitzModeProps) {
 
   const handleTimeout = useCallback(async () => {
     if (currentPuzzle) {
-      // save failed attempt
-      await saveProgress({
-        puzzleId: currentPuzzle.id,
-        solved: false,
-        attempts: 1,
-      });
-      
+      try {
+        // save failed attempt
+        await saveProgress({
+          puzzleId: currentPuzzle.id,
+          solved: false,
+          attempts: 1,
+        });
+
+        // update stats for failed attempt
+        const stats = await getStats();
+        if (stats) {
+          const newTotalPuzzles = stats.totalPuzzles + 1;
+          const newAccuracy = stats.solvedPuzzles / newTotalPuzzles;
+          const diffBreakdown = { ...stats.difficultyBreakdown };
+          if (currentPuzzle.difficulty && diffBreakdown[currentPuzzle.difficulty]) {
+            diffBreakdown[currentPuzzle.difficulty].attempted += 1;
+          }
+
+          await setStats({
+            ...stats,
+            totalPuzzles: newTotalPuzzles,
+            currentStreak: 0,
+            accuracy: newAccuracy,
+            difficultyBreakdown: diffBreakdown,
+          });
+        }
+      } catch (error) {
+        console.error('failed to save progress or stats:', error);
+      }
+
       setStreak(0);
       // show failure message briefly, then next puzzle
       setTimeout(() => {
@@ -80,33 +105,50 @@ export function BlitzMode({ timeLimit, difficulty, onExit }: BlitzModeProps) {
   const handleSolved = useCallback(async () => {
     if (currentPuzzle) {
       const solveTime = timeLimit - timeRemaining;
-      
-      // save progress
-      await saveProgress({
-        puzzleId: currentPuzzle.id,
-        solved: true,
-        attempts: 1,
-        bestTime: solveTime,
-        lastAttempt: Date.now(),
-        streak: streak + 1,
-      });
 
-      // update stats
-      const stats = await getStats();
-      if (stats) {
-        await setStats({
-          ...stats,
-          solvedPuzzles: stats.solvedPuzzles + 1,
-          currentStreak: streak + 1,
-          bestStreak: Math.max(stats.bestStreak, streak + 1),
-          totalTime: stats.totalTime + solveTime,
-          averageTime: (stats.totalTime + solveTime) / (stats.solvedPuzzles + 1),
+      try {
+        // save progress
+        await saveProgress({
+          puzzleId: currentPuzzle.id,
+          solved: true,
+          attempts: 1,
+          bestTime: solveTime,
+          lastAttempt: Date.now(),
+          streak: streak + 1,
         });
+
+        // update stats
+        const stats = await getStats();
+        if (stats) {
+          const newSolvedPuzzles = stats.solvedPuzzles + 1;
+          const newTotalPuzzles = stats.totalPuzzles + 1;
+          const newTotalTime = stats.totalTime + solveTime;
+          const newAccuracy = newSolvedPuzzles / newTotalPuzzles;
+          const diffBreakdown = { ...stats.difficultyBreakdown };
+          if (currentPuzzle.difficulty && diffBreakdown[currentPuzzle.difficulty]) {
+            diffBreakdown[currentPuzzle.difficulty].attempted += 1;
+            diffBreakdown[currentPuzzle.difficulty].solved += 1;
+          }
+
+          await setStats({
+            ...stats,
+            totalPuzzles: newTotalPuzzles,
+            solvedPuzzles: newSolvedPuzzles,
+            currentStreak: streak + 1,
+            bestStreak: Math.max(stats.bestStreak, streak + 1),
+            totalTime: newTotalTime,
+            averageTime: newTotalTime / newSolvedPuzzles,
+            accuracy: newAccuracy,
+            difficultyBreakdown: diffBreakdown,
+          });
+        }
+      } catch (error) {
+        console.error('failed to save progress or stats:', error);
       }
 
       setScore(prev => prev + 1);
       setStreak(prev => prev + 1);
-      
+
       // show success briefly, then next puzzle
       setTimeout(() => {
         loadNextPuzzle();
@@ -169,13 +211,28 @@ export function BlitzMode({ timeLimit, difficulty, onExit }: BlitzModeProps) {
         </div>
       )}
 
+      {hintMessage && (
+        <div className="text-lg text-blue-600 font-medium animate-fade-in">
+          {hintMessage}
+        </div>
+      )}
+
       <div className="flex gap-4">
         <button
           onClick={async () => {
-            const hint = await puzzle.getHint();
-            if (hint) {
-              // show hint visually
-              console.log('hint:', hint);
+            try {
+              const hint = await puzzle.getHint();
+              if (hint) {
+                setHintMessage(`Hint: Try ${hint}`);
+                setTimeout(() => setHintMessage(null), 5000);
+              } else {
+                setHintMessage('No hint available (engine not configured)');
+                setTimeout(() => setHintMessage(null), 3000);
+              }
+            } catch (error) {
+              console.error('failed to get hint:', error);
+              setHintMessage('Failed to get hint');
+              setTimeout(() => setHintMessage(null), 3000);
             }
           }}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
@@ -187,6 +244,7 @@ export function BlitzMode({ timeLimit, difficulty, onExit }: BlitzModeProps) {
           onClick={() => {
             puzzle.reset();
             setTimeRemaining(timeLimit);
+            setHintMessage(null);
           }}
           className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
         >

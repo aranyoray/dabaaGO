@@ -35,8 +35,9 @@ describe('Puzzle validation', () => {
 describe('Move validation', () => {
   it('should reject illegal moves', () => {
     const chess = new Chess();
-    const move = chess.move({ from: 'e2', to: 'e5' });
-    expect(move).toBeNull();
+    expect(() => {
+      chess.move({ from: 'e2', to: 'e5' });
+    }).toThrow();
   });
 
   it('should accept legal moves', () => {
