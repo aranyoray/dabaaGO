@@ -46,6 +46,7 @@ export interface Puzzle {
   mainTactic?: TacticType; // primary tactic to learn
   hint?: string; // tactical hint without revealing solution
   validated?: boolean; // puzzle is solvable and tested
+  engineVerified?: boolean; // puzzle validated by Stockfish AI
   moveCount?: number; // number of moves in solution (2-7)
   sourceUrl?: string;
   pieceCount?: number;
