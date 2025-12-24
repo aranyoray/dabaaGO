@@ -52,15 +52,27 @@ export function ChessBoard({
 
   const handleSquareClick = (square: Square) => {
     if (disabled || !onMove) return;
-    
+
     if (selected) {
+      // clicking same square deselects
       if (selected === square) {
         setSelected(null);
         return;
       }
+
+      // try to move
       if (isLegalMove(selected, square)) {
         onMove(selected, square);
         setSelected(null);
+      } else {
+        // clicking different piece switches selection
+        const piece = chess.get(square);
+        if (piece && piece.color === chess.turn()) {
+          setSelected(square);
+        } else {
+          // clicking empty square or opponent piece deselects
+          setSelected(null);
+        }
       }
     } else {
       const piece = chess.get(square);

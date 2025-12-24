@@ -1,4 +1,4 @@
-// daily puzzle mode - one special puzzle per day
+// daily puzzle mode - one special validated puzzle per day
 
 import { useState, useEffect, useCallback } from 'react';
 import { ChessBoard } from '../components/Board';
@@ -8,6 +8,7 @@ import type { Puzzle } from '../types';
 import { getAllPuzzles, saveProgress } from '../services/localStore';
 import { getUserProfile, updateUserProfile, savePuzzleScore } from '../services/profileService';
 import { calculatePuzzleScore, calculateEloChange } from '../utils/scoring';
+import { generateTacticalHint, getTacticName, enhancePuzzle } from '../utils/puzzleValidator';
 import type { Square } from 'chess.js';
 
 interface DailyPuzzleProps {
@@ -18,13 +19,12 @@ export function DailyPuzzleMode({ onExit }: DailyPuzzleProps) {
   const [currentPuzzle, setCurrentPuzzle] = useState<Puzzle | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [alreadyCompleted, setAlreadyCompleted] = useState(false);
-   // 2 minutes
   const [attempts, setAttempts] = useState(0);
   const [startTime] = useState(Date.now());
+  const [hintMessage, setHintMessage] = useState<string | null>(null);
 
   const puzzle = usePuzzle(currentPuzzle);
 
-  // load today's puzzle
   useEffect(() => {
     loadDailyPuzzle();
   }, []);
@@ -32,7 +32,6 @@ export function DailyPuzzleMode({ onExit }: DailyPuzzleProps) {
   const loadDailyPuzzle = async () => {
     setIsLoading(true);
     try {
-      // get today's date as seed
       const today = new Date().toDateString();
       const seed = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
 
@@ -42,14 +41,36 @@ export function DailyPuzzleMode({ onExit }: DailyPuzzleProps) {
         return;
       }
 
-      // select puzzle deterministically based on today's date
-      const dailyPuzzle = allPuzzles[seed % allPuzzles.length];
+      // get used puzzle IDs to prevent repeats
+      const usedPuzzlesStr = localStorage.getItem('daily-puzzles-used');
+      const usedPuzzles: string[] = usedPuzzlesStr ? JSON.parse(usedPuzzlesStr) : [];
+      const availablePuzzles = allPuzzles.filter(p => !usedPuzzles.includes(p.id));
+      const puzzlePool = availablePuzzles.length > 0 ? availablePuzzles : allPuzzles;
+
+      // prefer puzzles with 2-7 moves
+      const validPuzzles = puzzlePool.filter(p =>
+        p.solution.length >= 2 && p.solution.length <= 7
+      );
+      const finalPool = validPuzzles.length > 0 ? validPuzzles : puzzlePool;
+
+      // select deterministically
+      let dailyPuzzle = finalPool[seed % finalPool.length];
+
+      // enhance with tactical info
+      dailyPuzzle = enhancePuzzle(dailyPuzzle);
+
       setCurrentPuzzle(dailyPuzzle);
 
-      // check if already completed today
+      // check if completed today
       const storageKey = `daily-puzzle-${today}`;
       const completed = localStorage.getItem(storageKey);
       setAlreadyCompleted(completed === 'true');
+
+      // mark as used
+      if (!usedPuzzles.includes(dailyPuzzle.id)) {
+        usedPuzzles.push(dailyPuzzle.id);
+        localStorage.setItem('daily-puzzles-used', JSON.stringify(usedPuzzles));
+      }
 
       setIsLoading(false);
     } catch (error) {
@@ -70,7 +91,6 @@ export function DailyPuzzleMode({ onExit }: DailyPuzzleProps) {
     const score = calculatePuzzleScore(120000, timeTaken, attempts, currentPuzzle.difficulty);
 
     try {
-      // save progress
       await saveProgress({
         puzzleId: currentPuzzle.id,
         solved: true,
@@ -79,10 +99,8 @@ export function DailyPuzzleMode({ onExit }: DailyPuzzleProps) {
         lastAttempt: Date.now(),
       });
 
-      // save score
       await savePuzzleScore({ ...score, puzzleId: currentPuzzle.id });
 
-      // update ELO
       const profile = await getUserProfile();
       const eloChange = calculateEloChange(
         profile.elo,
@@ -91,7 +109,6 @@ export function DailyPuzzleMode({ onExit }: DailyPuzzleProps) {
       );
       await updateUserProfile({ elo: profile.elo + eloChange });
 
-      // mark as completed for today
       const today = new Date().toDateString();
       localStorage.setItem(`daily-puzzle-${today}`, 'true');
       setAlreadyCompleted(true);
@@ -108,7 +125,7 @@ export function DailyPuzzleMode({ onExit }: DailyPuzzleProps) {
 
   if (isLoading || !currentPuzzle) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center min-h-screen p-4">
         <div className="text-lg">Loading daily puzzle...</div>
       </div>
     );
@@ -116,17 +133,17 @@ export function DailyPuzzleMode({ onExit }: DailyPuzzleProps) {
 
   if (alreadyCompleted && puzzle.isSolved) {
     return (
-      <div className="flex flex-col items-center gap-6 p-6">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold mb-4">Daily Puzzle Complete! 🎉</h2>
-          <p className="text-lg text-gray-600 mb-6">
+      <div className="flex flex-col items-center gap-6 p-4 sm:p-6 min-h-screen justify-center">
+        <div className="text-center max-w-md">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4">Daily Puzzle Complete! 🎉</h2>
+          <p className="text-base sm:text-lg text-gray-600 mb-6">
             You've already completed today's puzzle.
             <br />
             Come back tomorrow for a new challenge!
           </p>
           <button
             onClick={onExit}
-            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm sm:text-base"
           >
             Back to Menu
           </button>
@@ -136,21 +153,21 @@ export function DailyPuzzleMode({ onExit }: DailyPuzzleProps) {
   }
 
   return (
-    <div className="flex flex-col items-center gap-6 p-6">
-      <div className="flex items-center justify-between w-full max-w-2xl">
+    <div className="flex flex-col items-center gap-4 sm:gap-6 p-4 sm:p-6 min-h-screen">
+      <div className="flex items-center justify-between w-full max-w-2xl flex-wrap gap-4">
         <button
           onClick={onExit}
-          className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+          className="px-3 py-2 sm:px-4 sm:py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm sm:text-base"
         >
-          Exit
+          ← Exit
         </button>
-        <div className="text-center">
-          <div className="text-2xl font-bold">Daily Puzzle</div>
-          <div className="text-sm text-gray-600">
-            Difficulty: {currentPuzzle.difficulty}
+        <div className="text-center flex-1">
+          <div className="text-xl sm:text-2xl font-bold">Daily Puzzle 🌟</div>
+          <div className="text-xs sm:text-sm text-gray-600">
+            {currentPuzzle.difficulty} • {currentPuzzle.solution.length} moves
           </div>
         </div>
-        <div className="w-20" /> {/* spacer */}
+        <div className="w-16 sm:w-20" />
       </div>
 
       <Timer
@@ -160,26 +177,60 @@ export function DailyPuzzleMode({ onExit }: DailyPuzzleProps) {
         paused={puzzle.isSolved || puzzle.isFailed}
       />
 
-      <ChessBoard
-        fen={puzzle.chess.fen()}
-        onMove={handleMove}
-        legalMoves={puzzle.chess.moves({ verbose: true }).map(m => `${m.from}${m.to}`)}
-        disabled={puzzle.isSolved || puzzle.isFailed}
-      />
+      <div className="w-full max-w-md sm:max-w-lg">
+        <ChessBoard
+          fen={puzzle.chess.fen()}
+          onMove={handleMove}
+          legalMoves={puzzle.chess.moves({ verbose: true }).map(m => `${m.from}${m.to}`)}
+          disabled={puzzle.isSolved || puzzle.isFailed}
+        />
+      </div>
 
       {puzzle.isSolved && (
-        <div className="text-2xl font-bold text-green-600 animate-puzzle-success">
+        <div className="text-xl sm:text-2xl font-bold text-green-600 animate-puzzle-success text-center px-4">
           Excellent! Daily puzzle solved! 🌟
         </div>
       )}
 
       {puzzle.isFailed && (
-        <div className="text-2xl font-bold text-red-600">
+        <div className="text-xl sm:text-2xl font-bold text-red-600 text-center px-4">
           Not quite right. Try again!
         </div>
       )}
 
-      <div className="text-sm text-gray-600">
+      {hintMessage && (
+        <div className="text-sm sm:text-base text-blue-600 font-medium p-3 sm:p-4 bg-blue-50 rounded-lg max-w-md text-center">
+          💡 {hintMessage}
+        </div>
+      )}
+
+      {currentPuzzle.mainTactic && (
+        <div className="text-xs sm:text-sm bg-gray-100 px-3 sm:px-4 py-2 rounded max-w-md text-center">
+          <span className="font-medium">Tactic:</span> {getTacticName(currentPuzzle.mainTactic)}
+        </div>
+      )}
+
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full max-w-md px-4">
+        <button
+          onClick={() => {
+            const hint = generateTacticalHint(currentPuzzle);
+            setHintMessage(hint);
+            setTimeout(() => setHintMessage(null), 10000);
+          }}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm sm:text-base disabled:opacity-50"
+          disabled={puzzle.isSolved || puzzle.isFailed}
+        >
+          💡 Get Hint
+        </button>
+        <button
+          onClick={() => puzzle.reset()}
+          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm sm:text-base"
+        >
+          🔄 Reset
+        </button>
+      </div>
+
+      <div className="text-xs sm:text-sm text-gray-600 text-center px-4">
         Attempts: {attempts}
       </div>
     </div>

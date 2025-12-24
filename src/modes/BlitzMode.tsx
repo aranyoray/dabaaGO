@@ -7,6 +7,7 @@ import { usePuzzle } from '../hooks/usePuzzle';
 import type { Puzzle } from '../types';
 import { getPuzzlesByDifficulty, getAllPuzzles } from '../services/localStore';
 import { saveProgress, getStats, setStats } from '../services/localStore';
+import { generateTacticalHint, getTacticName } from '../utils/puzzleValidator';
 import type { Square } from 'chess.js';
 
 interface BlitzModeProps {
@@ -212,8 +213,14 @@ export function BlitzMode({ timeLimit, difficulty, onExit }: BlitzModeProps) {
       )}
 
       {hintMessage && (
-        <div className="text-lg text-blue-600 font-medium animate-fade-in">
-          {hintMessage}
+        <div className="text-lg text-blue-600 font-medium animate-fade-in p-4 bg-blue-50 rounded-lg">
+          💡 {hintMessage}
+        </div>
+      )}
+
+      {currentPuzzle?.mainTactic && (
+        <div className="text-sm text-gray-600 bg-gray-100 px-4 py-2 rounded">
+          <span className="font-medium">Tactic:</span> {getTacticName(currentPuzzle.mainTactic)}
         </div>
       )}
 
@@ -221,24 +228,33 @@ export function BlitzMode({ timeLimit, difficulty, onExit }: BlitzModeProps) {
         <button
           onClick={async () => {
             try {
+              // try tactical hint first
+              if (currentPuzzle) {
+                const tacticalHint = generateTacticalHint(currentPuzzle);
+                setHintMessage(tacticalHint);
+                setTimeout(() => setHintMessage(null), 8000);
+                return;
+              }
+
+              // fallback to engine hint
               const hint = await puzzle.getHint();
               if (hint) {
-                setHintMessage(`Hint: Try ${hint}`);
+                setHintMessage(`Try moving ${hint}`);
                 setTimeout(() => setHintMessage(null), 5000);
               } else {
-                setHintMessage('No hint available (engine not configured)');
+                setHintMessage('Think about the position carefully!');
                 setTimeout(() => setHintMessage(null), 3000);
               }
             } catch (error) {
               console.error('failed to get hint:', error);
-              setHintMessage('Failed to get hint');
+              setHintMessage('Look for tactical opportunities!');
               setTimeout(() => setHintMessage(null), 3000);
             }
           }}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
           disabled={puzzle.isSolved || puzzle.isFailed}
         >
-          Hint
+          💡 Get Hint
         </button>
         <button
           onClick={() => {
