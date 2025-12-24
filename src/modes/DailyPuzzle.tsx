@@ -8,7 +8,7 @@ import type { Puzzle } from '../types';
 import { getAllPuzzles, saveProgress } from '../services/localStore';
 import { getUserProfile, updateUserProfile, savePuzzleScore } from '../services/profileService';
 import { calculatePuzzleScore, calculateEloChange } from '../utils/scoring';
-import { generateTacticalHint, getTacticName, enhancePuzzle, generateInstructionalHint } from '../utils/puzzleValidator';
+import { generateTacticalHint, getTacticName, enhancePuzzleWithEngine, generateInstructionalHint } from '../utils/puzzleValidator';
 import type { Square } from 'chess.js';
 
 interface DailyPuzzleProps {
@@ -57,8 +57,8 @@ export function DailyPuzzleMode({ onExit }: DailyPuzzleProps) {
       // select deterministically
       let dailyPuzzle = finalPool[seed % finalPool.length];
 
-      // enhance with tactical info
-      dailyPuzzle = enhancePuzzle(dailyPuzzle);
+      // enhance with tactical info and validate with Stockfish
+      dailyPuzzle = await enhancePuzzleWithEngine(dailyPuzzle);
 
       setCurrentPuzzle(dailyPuzzle);
 

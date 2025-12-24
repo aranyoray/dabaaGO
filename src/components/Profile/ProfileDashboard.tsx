@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import type { UserProfile } from '../../types';
-import { getUserProfile, setPlayerLevel } from '../../services/profileService';
+import { getUserProfile, setPlayerLevel, completeTutorial } from '../../services/profileService';
 import { PandaAvatar } from '../PandaMascot/PandaMascot';
 
 
@@ -40,6 +40,7 @@ export function ProfileDashboard({ onClose }: ProfileDashboardProps) {
 
   const handleLevelSelect = async (level: 'beginner' | 'amateur') => {
     await setPlayerLevel(level);
+    await completeTutorial();
     setShowLevelSelector(false);
     loadProfile();
   };

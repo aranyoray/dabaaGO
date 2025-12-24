@@ -2,6 +2,7 @@
 
 import { Chess } from 'chess.js';
 import type { Puzzle, TacticType, LearningTheme } from '../types';
+import { verifySolution } from '../services/engine';
 
 /**
  * Validate that a puzzle is solvable
@@ -256,7 +257,37 @@ export function detectTactic(puzzle: Puzzle): TacticType | null {
 }
 
 /**
- * Enhance puzzle with tactical information
+ * Validate puzzle with Stockfish AI (async)
+ */
+export async function validatePuzzleWithEngine(puzzle: Puzzle): Promise<{
+  valid: boolean;
+  errors: string[];
+  moveCount: number;
+  engineVerified: boolean;
+}> {
+  // first do basic validation with chess.js
+  const basicValidation = validatePuzzle(puzzle);
+
+  if (!basicValidation.valid) {
+    return { ...basicValidation, engineVerified: false };
+  }
+
+  // then verify with Stockfish engine
+  try {
+    const engineValid = await verifySolution(puzzle.fen, puzzle.solution, 5000);
+    return {
+      ...basicValidation,
+      engineVerified: engineValid,
+      valid: basicValidation.valid && engineValid,
+    };
+  } catch (error) {
+    console.warn('engine validation failed, falling back to chess.js validation:', error);
+    return { ...basicValidation, engineVerified: false };
+  }
+}
+
+/**
+ * Enhance puzzle with tactical information (sync version)
  */
 export function enhancePuzzle(puzzle: Puzzle): Puzzle {
   const validation = validatePuzzle(puzzle);
@@ -268,5 +299,22 @@ export function enhancePuzzle(puzzle: Puzzle): Puzzle {
     moveCount: validation.moveCount,
     mainTactic: detectedTactic || undefined,
     hint: puzzle.hint || (detectedTactic ? generateTacticalHint({ ...puzzle, mainTactic: detectedTactic }) : undefined),
+  };
+}
+
+/**
+ * Enhance puzzle with tactical information and engine validation (async version)
+ */
+export async function enhancePuzzleWithEngine(puzzle: Puzzle): Promise<Puzzle> {
+  const validation = await validatePuzzleWithEngine(puzzle);
+  const detectedTactic = puzzle.mainTactic || detectTactic(puzzle);
+
+  return {
+    ...puzzle,
+    validated: validation.valid,
+    moveCount: validation.moveCount,
+    mainTactic: detectedTactic || undefined,
+    hint: puzzle.hint || (detectedTactic ? generateTacticalHint({ ...puzzle, mainTactic: detectedTactic }) : undefined),
+    engineVerified: validation.engineVerified,
   };
 }
