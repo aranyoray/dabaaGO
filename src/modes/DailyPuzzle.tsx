@@ -8,7 +8,7 @@ import type { Puzzle } from '../types';
 import { getAllPuzzles, saveProgress } from '../services/localStore';
 import { getUserProfile, updateUserProfile, savePuzzleScore } from '../services/profileService';
 import { calculatePuzzleScore, calculateEloChange } from '../utils/scoring';
-import { generateTacticalHint, getTacticName, enhancePuzzle } from '../utils/puzzleValidator';
+import { generateTacticalHint, getTacticName, enhancePuzzle, generateInstructionalHint } from '../utils/puzzleValidator';
 import type { Square } from 'chess.js';
 
 interface DailyPuzzleProps {
@@ -201,8 +201,8 @@ export function DailyPuzzleMode({ onExit }: DailyPuzzleProps) {
         <div className="text-base sm:text-lg font-bold bg-yellow-100 dark:bg-yellow-900 px-4 sm:px-6 py-2 rounded-full">
           You're playing as {puzzle.chess.turn() === 'w' ? 'White ♔' : 'Black ♚'}
         </div>
-        <div className="text-xs sm:text-sm text-gray-600 bg-gray-100 px-3 sm:px-4 py-2 rounded">
-          Today's special puzzle - find the best move!
+        <div className="text-sm sm:text-base font-bold text-purple-700 bg-purple-100 px-4 sm:px-6 py-3 rounded-lg">
+          {generateInstructionalHint(currentPuzzle, puzzle.currentMove)}
         </div>
       </div>
 

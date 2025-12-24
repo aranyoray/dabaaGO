@@ -190,14 +190,14 @@ export function PuzzleRushMode({ onExit }: PuzzleRushProps) {
       )}
 
       {encouragement && !puzzle.isSolved && (
-        <div className="text-lg font-medium text-blue-600 animate-fade-in">
+        <div className="text-2xl font-medium text-purple-600 animate-fade-in bg-purple-50 px-6 py-4 rounded-xl">
           {encouragement}
         </div>
       )}
 
       {puzzle.wrongMoveCount > 0 && !puzzle.isSolved && (
-        <div className="text-sm text-gray-500 italic">
-          Keep trying! Speed comes with practice 🚀
+        <div className="text-base text-gray-600 bg-gray-100 px-4 py-2 rounded-lg">
+          Try again! Think about what piece to move 🤔
         </div>
       )}
     </div>
