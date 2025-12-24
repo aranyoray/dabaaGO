@@ -1,6 +1,6 @@
 // svg chess board component with 2.5d styling
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { Chess } from 'chess.js';
 import type { Square } from 'chess.js';
 import { Piece } from './Piece';
@@ -29,7 +29,7 @@ export function ChessBoard({
 }: ChessBoardProps) {
   const [selected, setSelected] = useState<Square | null>(null);
   const boardRef = useRef<SVGSVGElement>(null);
-  const chess = new Chess(fen);
+  const chess = useMemo(() => new Chess(fen), [fen]);
 
   const isLight = (file: number, rank: number) => {
     return (file + rank) % 2 === 0;
@@ -52,15 +52,27 @@ export function ChessBoard({
 
   const handleSquareClick = (square: Square) => {
     if (disabled || !onMove) return;
-    
+
     if (selected) {
+      // clicking same square deselects
       if (selected === square) {
         setSelected(null);
         return;
       }
+
+      // try to move
       if (isLegalMove(selected, square)) {
         onMove(selected, square);
         setSelected(null);
+      } else {
+        // clicking different piece switches selection
+        const piece = chess.get(square);
+        if (piece && piece.color === chess.turn()) {
+          setSelected(square);
+        } else {
+          // clicking empty square or opponent piece deselects
+          setSelected(null);
+        }
       }
     } else {
       const piece = chess.get(square);
