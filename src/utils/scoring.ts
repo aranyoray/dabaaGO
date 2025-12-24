@@ -3,7 +3,7 @@
 import type { League, PuzzleScore, PlayerLevel } from '../types';
 
 /**
- * Calculate puzzle score (0-100) based on time, accuracy, and attempts
+ * Calculate puzzle score (kid-friendly 1-10 points) based on time, accuracy, and attempts
  */
 export function calculatePuzzleScore(
   timeLimit: number,
@@ -11,35 +11,32 @@ export function calculatePuzzleScore(
   attempts: number,
   difficulty: string
 ): PuzzleScore {
-  const baseScore = 100;
+  const baseScore = 5; // base 5 points for solving
 
-  // time bonus: faster = more points (max 30 points)
+  // time bonus: faster = more points (max 3 points)
   const timeRatio = timeTaken / timeLimit;
-  const timeBonus = Math.max(0, Math.min(30, 30 * (1 - timeRatio)));
+  const timeBonus = Math.max(0, Math.min(3, 3 * (1 - timeRatio)));
 
-  // accuracy bonus: solved on first try = more points (max 40 points)
-  const accuracyBonus = attempts === 1 ? 40 : Math.max(0, 40 - (attempts - 1) * 10);
+  // accuracy bonus: solved on first try = more points (max 2 points)
+  const accuracyBonus = attempts === 1 ? 2 : Math.max(0, 2 - (attempts - 1) * 0.5);
 
-  // attempts deduction: more attempts = fewer points
-  const attemptsDeduction = Math.min(30, (attempts - 1) * 10);
+  // difficulty bonus
+  const difficultyBonus = {
+    simple: 0,
+    medium: 1,
+    hard: 2,
+    ultra: 3,
+  }[difficulty] || 0;
 
-  // difficulty multiplier
-  const difficultyMultiplier = {
-    simple: 0.8,
-    medium: 1.0,
-    hard: 1.2,
-    ultra: 1.5,
-  }[difficulty] || 1.0;
-
-  const rawScore = baseScore + timeBonus + accuracyBonus - attemptsDeduction;
-  const score = Math.max(0, Math.min(100, Math.round(rawScore * difficultyMultiplier)));
+  const rawScore = baseScore + timeBonus + accuracyBonus + difficultyBonus;
+  const score = Math.max(1, Math.min(10, Math.round(rawScore)));
 
   return {
     puzzleId: '',
     score,
-    timeBonus: Math.round(timeBonus),
-    accuracyBonus: Math.round(accuracyBonus),
-    attemptsDeduction,
+    timeBonus: Math.round(timeBonus * 10) / 10,
+    accuracyBonus: Math.round(accuracyBonus * 10) / 10,
+    attemptsDeduction: 0,
     timestamp: Date.now(),
   };
 }

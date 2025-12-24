@@ -197,9 +197,19 @@ export function DailyPuzzleMode({ onExit }: DailyPuzzleProps) {
         paused={puzzle.isSolved || puzzle.isFailed}
       />
 
+      <div className="flex flex-col items-center gap-3">
+        <div className="text-base sm:text-lg font-bold bg-yellow-100 dark:bg-yellow-900 px-4 sm:px-6 py-2 rounded-full">
+          You're playing as {puzzle.chess.turn() === 'w' ? 'White ♔' : 'Black ♚'}
+        </div>
+        <div className="text-xs sm:text-sm text-gray-600 bg-gray-100 px-3 sm:px-4 py-2 rounded">
+          Today's special puzzle - find the best move!
+        </div>
+      </div>
+
       <div className="w-full max-w-md sm:max-w-lg">
         <ChessBoard
           fen={puzzle.chess.fen()}
+          orientation={puzzle.chess.turn() === 'w' ? 'white' : 'black'}
           onMove={handleMove}
           legalMoves={puzzle.chess.moves({ verbose: true }).map(m => `${m.from}${m.to}`)}
           disabled={puzzle.isSolved || puzzle.isFailed}

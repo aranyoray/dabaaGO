@@ -75,11 +75,10 @@ export function PuzzleRushMode({ onExit }: PuzzleRushProps) {
     const timeTaken = Date.now() - puzzleStartTime;
     const puzzleScore = calculatePuzzleScore(30000, timeTaken, 1, currentPuzzle.difficulty);
 
-    // consecutive wins get multiplier
-    const streakMultiplier = 1 + (streak * 0.1);
-    const finalScore = Math.round(puzzleScore.score * streakMultiplier);
+    // add puzzle score directly (already 1-10 points)
+    const points = puzzleScore.score;
 
-    setScore(prev => prev + finalScore);
+    setScore(prev => prev + points);
     setSolved(prev => prev + 1);
     setStreak(prev => prev + 1);
 
@@ -87,7 +86,7 @@ export function PuzzleRushMode({ onExit }: PuzzleRushProps) {
       await savePuzzleScore({
         ...puzzleScore,
         puzzleId: currentPuzzle.id,
-        score: finalScore,
+        score: points,
       });
     } catch (error) {
       console.error('failed to save score:', error);
@@ -170,16 +169,23 @@ export function PuzzleRushMode({ onExit }: PuzzleRushProps) {
         paused={false}
       />
 
+      <div className="flex flex-col items-center gap-2">
+        <div className="text-base font-bold bg-red-100 dark:bg-red-900 px-4 py-2 rounded-full">
+          Playing as {puzzle.chess.turn() === 'w' ? 'White ♔' : 'Black ♚'}
+        </div>
+      </div>
+
       <ChessBoard
         fen={puzzle.chess.fen()}
+        orientation={puzzle.chess.turn() === 'w' ? 'white' : 'black'}
         onMove={handleMove}
         legalMoves={puzzle.chess.moves({ verbose: true }).map(m => `${m.from}${m.to}`)}
         disabled={puzzle.isSolved || puzzle.isFailed}
       />
 
       {puzzle.isSolved && (
-        <div className="text-2xl font-bold text-green-600 animate-pulse">
-          Awesome! +{Math.round((1 + streak * 0.1) * 100)} 🎉
+        <div className="text-3xl font-bold text-green-600 animate-pulse">
+          Great job! 🎉
         </div>
       )}
 

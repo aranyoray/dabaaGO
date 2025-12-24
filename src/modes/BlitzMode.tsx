@@ -216,8 +216,18 @@ export function BlitzMode({ timeLimit, difficulty, onExit }: BlitzModeProps) {
         paused={puzzle.isSolved || puzzle.isFailed}
       />
 
+      <div className="flex flex-col items-center gap-3">
+        <div className="text-lg font-bold bg-blue-100 dark:bg-blue-900 px-6 py-2 rounded-full">
+          You're playing as {puzzle.chess.turn() === 'w' ? 'White ♔' : 'Black ♚'}
+        </div>
+        <div className="text-sm text-gray-600 bg-gray-100 px-4 py-2 rounded">
+          Find the best move to solve this puzzle!
+        </div>
+      </div>
+
       <ChessBoard
         fen={puzzle.chess.fen()}
+        orientation={puzzle.chess.turn() === 'w' ? 'white' : 'black'}
         onMove={handleMove}
         legalMoves={puzzle.chess.moves({ verbose: true }).map(m => `${m.from}${m.to}`)}
         disabled={puzzle.isSolved || puzzle.isFailed}
