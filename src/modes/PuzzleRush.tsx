@@ -23,6 +23,7 @@ export function PuzzleRushMode({ onExit }: PuzzleRushProps) {
    // 15 minutes
   const [isGameOver, setIsGameOver] = useState(false);
   const [puzzleStartTime, setPuzzleStartTime] = useState(Date.now());
+  const [encouragement, setEncouragement] = useState<string | null>(null);
 
   const puzzle = usePuzzle(currentPuzzle);
 
@@ -53,7 +54,19 @@ export function PuzzleRushMode({ onExit }: PuzzleRushProps) {
   };
 
   const handleMove = useCallback((from: Square, to: Square) => {
-    puzzle.makeMove(from, to);
+    const success = puzzle.makeMove(from, to);
+
+    if (!success && !puzzle.isSolved) {
+      // wrong move - show quick encouraging feedback
+      const quickMessages = [
+        "Keep going! 💪",
+        "Try again! 🎯",
+        "Almost! 🌟",
+      ];
+      const msg = quickMessages[Math.floor(Math.random() * quickMessages.length)];
+      setEncouragement(msg);
+      setTimeout(() => setEncouragement(null), 1500);
+    }
   }, [puzzle]);
 
   const handleSolved = useCallback(async () => {
@@ -166,13 +179,19 @@ export function PuzzleRushMode({ onExit }: PuzzleRushProps) {
 
       {puzzle.isSolved && (
         <div className="text-2xl font-bold text-green-600 animate-pulse">
-          Correct! +{Math.round((1 + streak * 0.1) * 100)}
+          Awesome! +{Math.round((1 + streak * 0.1) * 100)} 🎉
         </div>
       )}
 
-      {puzzle.isFailed && (
-        <div className="text-2xl font-bold text-red-600">
-          Streak broken!
+      {encouragement && !puzzle.isSolved && (
+        <div className="text-lg font-medium text-blue-600 animate-fade-in">
+          {encouragement}
+        </div>
+      )}
+
+      {puzzle.wrongMoveCount > 0 && !puzzle.isSolved && (
+        <div className="text-sm text-gray-500 italic">
+          Keep trying! Speed comes with practice 🚀
         </div>
       )}
     </div>
