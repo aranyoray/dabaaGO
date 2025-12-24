@@ -23,6 +23,7 @@ export function PuzzleRushMode({ onExit }: PuzzleRushProps) {
    // 15 minutes
   const [isGameOver, setIsGameOver] = useState(false);
   const [puzzleStartTime, setPuzzleStartTime] = useState(Date.now());
+  const [encouragement, setEncouragement] = useState<string | null>(null);
 
   const puzzle = usePuzzle(currentPuzzle);
 
@@ -53,7 +54,19 @@ export function PuzzleRushMode({ onExit }: PuzzleRushProps) {
   };
 
   const handleMove = useCallback((from: Square, to: Square) => {
-    puzzle.makeMove(from, to);
+    const success = puzzle.makeMove(from, to);
+
+    if (!success && !puzzle.isSolved) {
+      // wrong move - show quick encouraging feedback
+      const quickMessages = [
+        "Keep going! 💪",
+        "Try again! 🎯",
+        "Almost! 🌟",
+      ];
+      const msg = quickMessages[Math.floor(Math.random() * quickMessages.length)];
+      setEncouragement(msg);
+      setTimeout(() => setEncouragement(null), 1500);
+    }
   }, [puzzle]);
 
   const handleSolved = useCallback(async () => {
@@ -62,11 +75,10 @@ export function PuzzleRushMode({ onExit }: PuzzleRushProps) {
     const timeTaken = Date.now() - puzzleStartTime;
     const puzzleScore = calculatePuzzleScore(30000, timeTaken, 1, currentPuzzle.difficulty);
 
-    // consecutive wins get multiplier
-    const streakMultiplier = 1 + (streak * 0.1);
-    const finalScore = Math.round(puzzleScore.score * streakMultiplier);
+    // add puzzle score directly (already 1-10 points)
+    const points = puzzleScore.score;
 
-    setScore(prev => prev + finalScore);
+    setScore(prev => prev + points);
     setSolved(prev => prev + 1);
     setStreak(prev => prev + 1);
 
@@ -74,7 +86,7 @@ export function PuzzleRushMode({ onExit }: PuzzleRushProps) {
       await savePuzzleScore({
         ...puzzleScore,
         puzzleId: currentPuzzle.id,
-        score: finalScore,
+        score: points,
       });
     } catch (error) {
       console.error('failed to save score:', error);
@@ -157,22 +169,35 @@ export function PuzzleRushMode({ onExit }: PuzzleRushProps) {
         paused={false}
       />
 
+      <div className="flex flex-col items-center gap-2">
+        <div className="text-base font-bold bg-red-100 dark:bg-red-900 px-4 py-2 rounded-full">
+          Playing as {puzzle.chess.turn() === 'w' ? 'White ♔' : 'Black ♚'}
+        </div>
+      </div>
+
       <ChessBoard
         fen={puzzle.chess.fen()}
+        orientation={puzzle.chess.turn() === 'w' ? 'white' : 'black'}
         onMove={handleMove}
         legalMoves={puzzle.chess.moves({ verbose: true }).map(m => `${m.from}${m.to}`)}
         disabled={puzzle.isSolved || puzzle.isFailed}
       />
 
       {puzzle.isSolved && (
-        <div className="text-2xl font-bold text-green-600 animate-pulse">
-          Correct! +{Math.round((1 + streak * 0.1) * 100)}
+        <div className="text-3xl font-bold text-green-600 animate-pulse">
+          Great job! 🎉
         </div>
       )}
 
-      {puzzle.isFailed && (
-        <div className="text-2xl font-bold text-red-600">
-          Streak broken!
+      {encouragement && !puzzle.isSolved && (
+        <div className="text-2xl font-medium text-purple-600 animate-fade-in bg-purple-50 px-6 py-4 rounded-xl">
+          {encouragement}
+        </div>
+      )}
+
+      {puzzle.wrongMoveCount > 0 && !puzzle.isSolved && (
+        <div className="text-base text-gray-600 bg-gray-100 px-4 py-2 rounded-lg">
+          Try again! Think about what piece to move 🤔
         </div>
       )}
     </div>

@@ -121,6 +121,53 @@ export function generateTacticalHint(puzzle: Puzzle): string {
 }
 
 /**
+ * Generate instructional hint based on the solution move (kid-friendly)
+ */
+export function generateInstructionalHint(puzzle: Puzzle, currentMoveIndex: number = 0): string {
+  if (!puzzle.solution || puzzle.solution.length === 0) {
+    return 'Think carefully about your next move!';
+  }
+
+  const move = puzzle.solution[currentMoveIndex];
+  if (!move) {
+    return 'Look for a strong move!';
+  }
+
+  // Parse the move to give helpful instructions
+  const pieceMap: Record<string, string> = {
+    'N': 'knight',
+    'B': 'bishop',
+    'R': 'rook',
+    'Q': 'queen',
+    'K': 'king',
+  };
+
+  const firstChar = move[0];
+  const isCapture = move.includes('x');
+  const isCheck = move.includes('+');
+  const isCheckmate = move.includes('#');
+
+  if (isCheckmate) {
+    return 'You can checkmate the king! Find the winning move! 👑';
+  }
+
+  if (isCheck) {
+    return 'Put the king in check! Look for a checking move! ✨';
+  }
+
+  let pieceName = 'pawn';
+  if (pieceMap[firstChar]) {
+    pieceName = pieceMap[firstChar];
+  }
+
+  if (isCapture) {
+    return `Use your ${pieceName} to capture an opponent's piece! 🎯`;
+  }
+
+  return `Try moving your ${pieceName} to a better square! 💫`;
+}
+
+/**
  * Get tactic name in readable format
  */
 export function getTacticName(tactic: TacticType): string {

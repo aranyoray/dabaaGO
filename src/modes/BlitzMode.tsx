@@ -7,7 +7,7 @@ import { usePuzzle } from '../hooks/usePuzzle';
 import type { Puzzle } from '../types';
 import { getPuzzlesByDifficulty, getAllPuzzles } from '../services/localStore';
 import { saveProgress, getStats, setStats } from '../services/localStore';
-import { generateTacticalHint, getTacticName } from '../utils/puzzleValidator';
+import { generateTacticalHint, getTacticName, generateInstructionalHint } from '../utils/puzzleValidator';
 import type { Square } from 'chess.js';
 
 interface BlitzModeProps {
@@ -23,6 +23,7 @@ export function BlitzMode({ timeLimit, difficulty, onExit }: BlitzModeProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [timeRemaining, setTimeRemaining] = useState(timeLimit);
   const [hintMessage, setHintMessage] = useState<string | null>(null);
+  const [encouragement, setEncouragement] = useState<string | null>(null);
 
   const puzzle = usePuzzle(currentPuzzle);
 
@@ -34,6 +35,7 @@ export function BlitzMode({ timeLimit, difficulty, onExit }: BlitzModeProps) {
   const loadNextPuzzle = async () => {
     setIsLoading(true);
     setHintMessage(null);
+    setEncouragement(null);
     try {
       let puzzles: Puzzle[];
       if (difficulty === 'adaptive') {
@@ -60,8 +62,29 @@ export function BlitzMode({ timeLimit, difficulty, onExit }: BlitzModeProps) {
   };
 
   const handleMove = useCallback((from: Square, to: Square) => {
-    puzzle.makeMove(from, to);
-  }, [puzzle]);
+    const success = puzzle.makeMove(from, to);
+
+    if (!success && !puzzle.isSolved) {
+      // wrong move - show encouraging feedback
+      const encouragingMessages = [
+        "Not quite! Keep exploring 🤔",
+        "Try a different approach! You've got this 💪",
+        "Think about the tactic here 🎯",
+        "Almost! What else can you try? 🌟",
+        "Keep going! Every attempt helps you learn 🚀",
+        "Take another look at the position 🔍",
+      ];
+
+      if (currentPuzzle?.mainTactic) {
+        const tacticName = getTacticName(currentPuzzle.mainTactic);
+        encouragingMessages.push(`Remember: this is a ${tacticName}! 💡`);
+      }
+
+      const msg = encouragingMessages[Math.floor(Math.random() * encouragingMessages.length)];
+      setEncouragement(msg);
+      setTimeout(() => setEncouragement(null), 3000);
+    }
+  }, [puzzle, currentPuzzle]);
 
   const handleTimeout = useCallback(async () => {
     if (currentPuzzle) {
@@ -193,8 +216,18 @@ export function BlitzMode({ timeLimit, difficulty, onExit }: BlitzModeProps) {
         paused={puzzle.isSolved || puzzle.isFailed}
       />
 
+      <div className="flex flex-col items-center gap-3">
+        <div className="text-lg font-bold bg-blue-100 dark:bg-blue-900 px-6 py-2 rounded-full">
+          You're playing as {puzzle.chess.turn() === 'w' ? 'White ♔' : 'Black ♚'}
+        </div>
+        <div className="text-base font-bold text-purple-700 bg-purple-100 px-6 py-3 rounded-lg">
+          {currentPuzzle && generateInstructionalHint(currentPuzzle, puzzle.currentMove)}
+        </div>
+      </div>
+
       <ChessBoard
         fen={puzzle.chess.fen()}
+        orientation={puzzle.chess.turn() === 'w' ? 'white' : 'black'}
         onMove={handleMove}
         legalMoves={puzzle.chess.moves({ verbose: true }).map(m => `${m.from}${m.to}`)}
         disabled={puzzle.isSolved || puzzle.isFailed}
@@ -202,13 +235,19 @@ export function BlitzMode({ timeLimit, difficulty, onExit }: BlitzModeProps) {
 
       {puzzle.isSolved && (
         <div className="text-2xl font-bold text-green-600 animate-puzzle-success">
-          Correct! Next puzzle...
+          Awesome! You got it! 🎉
         </div>
       )}
 
       {puzzle.isFailed && (
-        <div className="text-2xl font-bold text-red-600">
-          Wrong move. Time's up!
+        <div className="text-xl font-bold text-orange-600 animate-fade-in">
+          Time's up! Let's try another one 🕒
+        </div>
+      )}
+
+      {encouragement && !puzzle.isSolved && (
+        <div className="text-lg font-medium text-purple-600 animate-bounce-in p-4 bg-purple-50 rounded-lg">
+          {encouragement}
         </div>
       )}
 
@@ -224,7 +263,7 @@ export function BlitzMode({ timeLimit, difficulty, onExit }: BlitzModeProps) {
         </div>
       )}
 
-      <div className="flex gap-4">
+      <div className="flex justify-center">
         <button
           onClick={async () => {
             try {
@@ -251,22 +290,18 @@ export function BlitzMode({ timeLimit, difficulty, onExit }: BlitzModeProps) {
               setTimeout(() => setHintMessage(null), 3000);
             }
           }}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
-          disabled={puzzle.isSolved || puzzle.isFailed}
+          className="px-6 py-3 bg-blue-500 text-white text-lg font-bold rounded-xl hover:bg-blue-600 disabled:opacity-50 shadow-lg"
+          disabled={puzzle.isSolved}
         >
-          💡 Get Hint
-        </button>
-        <button
-          onClick={() => {
-            puzzle.reset();
-            setTimeRemaining(timeLimit);
-            setHintMessage(null);
-          }}
-          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-        >
-          Reset
+          💡 Need a Hint?
         </button>
       </div>
+
+      {puzzle.wrongMoveCount > 0 && !puzzle.isSolved && !puzzle.isFailed && (
+        <div className="text-sm text-gray-500 italic">
+          Remember: Every attempt is a learning opportunity! 🌱
+        </div>
+      )}
     </div>
   );
 }

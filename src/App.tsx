@@ -106,60 +106,89 @@ function ModePicker({
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
       <div className="max-w-6xl w-full p-8">
         <div className="text-center mb-8">
-          <h1 className="text-6xl font-bold mb-2">🐼 Daaba</h1>
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="text-8xl animate-wave">🐼</div>
+            <div className="text-left">
+              <h1 className="text-6xl font-bold mb-1">Daaba</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                Dynamic AI Assistant for Brainy Adventures
+              </p>
+            </div>
+            <div className="text-8xl animate-float">♟️</div>
+          </div>
           <p className="text-xl text-gray-600 dark:text-gray-400 mb-4">
-            Premium minimalist chess puzzles
+            Learn chess through fun puzzles! Solve tactics and become a master.
           </p>
-          <button
-            onClick={onShowProfile}
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium"
-          >
-            View Profile
-          </button>
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={onShowProfile}
+              className="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 font-bold shadow-lg text-lg"
+            >
+              👤 View Profile
+            </button>
+            <button
+              onClick={onShowLeaderboard}
+              className="px-6 py-3 bg-purple-500 text-white rounded-xl hover:bg-purple-600 font-bold shadow-lg text-lg"
+            >
+              🏆 Leaderboard
+            </button>
+          </div>
         </div>
 
         {/* Main game modes */}
         <div className="mb-8">
-          <h3 className="text-xl font-bold mb-4">Play Modes</h3>
+          <h3 className="text-2xl font-bold mb-4 text-center">🎮 Choose Your Adventure</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <button
               onClick={() => onSelectMode('daily')}
-              className="p-6 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-lg shadow-lg hover:shadow-xl transition-shadow text-left"
+              className="p-6 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all text-left"
             >
-              <h2 className="text-2xl font-bold mb-2">🌟 Daily Puzzle</h2>
-              <p className="text-white opacity-90">
-                One special puzzle per day. Come back daily!
+              <h2 className="text-3xl font-bold mb-2">🌟 Daily Puzzle</h2>
+              <p className="text-white opacity-90 text-lg">
+                One special puzzle every day!
               </p>
-            </button>
-
-            <button
-              onClick={() => onSelectMode('blitz')}
-              className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-shadow text-left"
-            >
-              <h2 className="text-2xl font-bold mb-2">⚡ Blitz Puzzles</h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                Fast-paced puzzles with time limits
-              </p>
-            </button>
-
-            <button
-              onClick={() => onSelectMode('puzzle-rush')}
-              className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-shadow text-left"
-            >
-              <h2 className="text-2xl font-bold mb-2">🔥 Puzzle Rush</h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                15 minutes. How many can you solve?
-              </p>
+              <div className="mt-2 text-sm bg-white/20 rounded px-3 py-1 inline-block">
+                Best for: Everyone 🐼
+              </div>
             </button>
 
             <button
               onClick={() => onSelectMode('practice')}
-              className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-shadow text-left"
+              className="p-6 bg-gradient-to-r from-green-400 to-blue-500 text-white rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all text-left"
             >
-              <h2 className="text-2xl font-bold mb-2">📚 Practice</h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                Unlimited time to learn and improve
+              <h2 className="text-3xl font-bold mb-2">📚 Practice Mode</h2>
+              <p className="text-white opacity-90 text-lg">
+                Learn at your own pace - no timer!
               </p>
+              <div className="mt-2 text-sm bg-white/20 rounded px-3 py-1 inline-block">
+                Best for: Beginners 🌱
+              </div>
+            </button>
+
+            <button
+              onClick={() => onSelectMode('blitz')}
+              className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all text-left border-2 border-blue-400"
+            >
+              <h2 className="text-3xl font-bold mb-2">⚡ Blitz Puzzles</h2>
+              <p className="text-gray-600 dark:text-gray-400 text-lg">
+                Solve puzzles before time runs out!
+              </p>
+              <div className="mt-2 text-sm bg-blue-100 dark:bg-blue-900 rounded px-3 py-1 inline-block">
+                Challenge yourself! ⏱️
+              </div>
+            </button>
+
+            <button
+              onClick={() => onSelectMode('puzzle-rush')}
+              className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all text-left border-2 border-red-400"
+            >
+              <h2 className="text-3xl font-bold mb-2">🔥 Puzzle Rush</h2>
+              <p className="text-gray-600 dark:text-gray-400 text-lg">
+                15 minutes - solve as many as you can!
+              </p>
+              <div className="mt-2 text-sm bg-red-100 dark:bg-red-900 rounded px-3 py-1 inline-block">
+                High score mode! 🎯
+              </div>
             </button>
 
             <button

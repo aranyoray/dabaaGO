@@ -8,7 +8,7 @@ import type { Puzzle } from '../types';
 import { getAllPuzzles, saveProgress } from '../services/localStore';
 import { getUserProfile, updateUserProfile, savePuzzleScore } from '../services/profileService';
 import { calculatePuzzleScore, calculateEloChange } from '../utils/scoring';
-import { generateTacticalHint, getTacticName, enhancePuzzle } from '../utils/puzzleValidator';
+import { generateTacticalHint, getTacticName, enhancePuzzle, generateInstructionalHint } from '../utils/puzzleValidator';
 import type { Square } from 'chess.js';
 
 interface DailyPuzzleProps {
@@ -22,6 +22,7 @@ export function DailyPuzzleMode({ onExit }: DailyPuzzleProps) {
   const [attempts, setAttempts] = useState(0);
   const [startTime] = useState(Date.now());
   const [hintMessage, setHintMessage] = useState<string | null>(null);
+  const [encouragement, setEncouragement] = useState<string | null>(null);
 
   const puzzle = usePuzzle(currentPuzzle);
 
@@ -81,8 +82,27 @@ export function DailyPuzzleMode({ onExit }: DailyPuzzleProps) {
 
   const handleMove = useCallback((from: Square, to: Square) => {
     setAttempts(prev => prev + 1);
-    puzzle.makeMove(from, to);
-  }, [puzzle]);
+    const success = puzzle.makeMove(from, to);
+
+    if (!success && !puzzle.isSolved) {
+      // wrong move - show encouraging feedback
+      const encouragingMessages = [
+        "Not quite! Think it through 🤔",
+        "Try a different approach! 💡",
+        "Keep exploring! You're learning 🌟",
+        "Almost there! Try again 💪",
+      ];
+
+      if (currentPuzzle?.mainTactic) {
+        const tacticName = getTacticName(currentPuzzle.mainTactic);
+        encouragingMessages.push(`Think about the ${tacticName}! 🎯`);
+      }
+
+      const msg = encouragingMessages[Math.floor(Math.random() * encouragingMessages.length)];
+      setEncouragement(msg);
+      setTimeout(() => setEncouragement(null), 3000);
+    }
+  }, [puzzle, currentPuzzle]);
 
   const handleSolved = useCallback(async () => {
     if (!currentPuzzle) return;
@@ -177,9 +197,19 @@ export function DailyPuzzleMode({ onExit }: DailyPuzzleProps) {
         paused={puzzle.isSolved || puzzle.isFailed}
       />
 
+      <div className="flex flex-col items-center gap-3">
+        <div className="text-base sm:text-lg font-bold bg-yellow-100 dark:bg-yellow-900 px-4 sm:px-6 py-2 rounded-full">
+          You're playing as {puzzle.chess.turn() === 'w' ? 'White ♔' : 'Black ♚'}
+        </div>
+        <div className="text-sm sm:text-base font-bold text-purple-700 bg-purple-100 px-4 sm:px-6 py-3 rounded-lg">
+          {generateInstructionalHint(currentPuzzle, puzzle.currentMove)}
+        </div>
+      </div>
+
       <div className="w-full max-w-md sm:max-w-lg">
         <ChessBoard
           fen={puzzle.chess.fen()}
+          orientation={puzzle.chess.turn() === 'w' ? 'white' : 'black'}
           onMove={handleMove}
           legalMoves={puzzle.chess.moves({ verbose: true }).map(m => `${m.from}${m.to}`)}
           disabled={puzzle.isSolved || puzzle.isFailed}
@@ -192,9 +222,15 @@ export function DailyPuzzleMode({ onExit }: DailyPuzzleProps) {
         </div>
       )}
 
-      {puzzle.isFailed && (
-        <div className="text-xl sm:text-2xl font-bold text-red-600 text-center px-4">
-          Not quite right. Try again!
+      {encouragement && !puzzle.isSolved && (
+        <div className="text-base sm:text-lg font-medium text-purple-600 animate-bounce-in p-3 sm:p-4 bg-purple-50 rounded-lg max-w-md text-center">
+          {encouragement}
+        </div>
+      )}
+
+      {puzzle.wrongMoveCount > 0 && !puzzle.isSolved && !puzzle.isFailed && (
+        <div className="text-xs sm:text-sm text-gray-500 italic text-center px-4">
+          Every attempt brings you closer to the solution! 🌱
         </div>
       )}
 
@@ -218,7 +254,7 @@ export function DailyPuzzleMode({ onExit }: DailyPuzzleProps) {
             setTimeout(() => setHintMessage(null), 10000);
           }}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm sm:text-base disabled:opacity-50"
-          disabled={puzzle.isSolved || puzzle.isFailed}
+          disabled={puzzle.isSolved}
         >
           💡 Get Hint
         </button>
